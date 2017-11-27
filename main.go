@@ -1,16 +1,36 @@
 package main
 
-import "github.com/messagebird/go-rest-api"
+import (
+	"github.com/messagebird/go-rest-api"
+	"net/http"
+	"fmt"
+	"io/ioutil"
+)
+
+var client SmsClient
 
 func main()  {
-	jsonString := `{"recipient":"+1234567890","originator":"originator","message":"message message me"}`
+	//curl localhost:8080 -d '{"recipient":"+1234567890","originator":"originator","message":"message"}' -H 'Content-Type: application/json'
+	http.HandleFunc("/", handler)
+	http.ListenAndServe(":8080", nil)
 
-	m := createMessageFromJson(jsonString)
+	if client == nil {
+		client = getClient()
+	}
+}
+func handler(writer http.ResponseWriter, request *http.Request) {
 
-	client := getClient()
+	jsonString, err := ioutil.ReadAll(request.Body)
+
+	if err != nil {
+		fmt.Fprintf(writer, "%s", err)
+	}
+
+	m := createMessageFromJson(string(jsonString))
+
+	//fmt.Println(m)
 
 	client.send(m)
-
 }
 
 func getClient() SmsClient  {
