@@ -1,5 +1,10 @@
 package main
 
-func send(message Message, client SmsClient)  {
-	client.send(message)
+type SmsSender struct {
+	SmsClient SmsClient
 }
+
+func (s SmsSender)send(message Message)  {
+	s.SmsClient.send(message)
+}
+

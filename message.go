@@ -6,3 +6,6 @@ type Message struct {
 	Message string
 }
 
+func (m Message) max_message_length() int {
+	return 160
+}
