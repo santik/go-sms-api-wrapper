@@ -3,7 +3,7 @@ package main
 import "github.com/messagebird/go-rest-api"
 
 func main()  {
-	jsonString := `{"recipient":"+1234567890","originator":"originator","message":"message"}`
+	jsonString := `{"recipient":"+1234567890","originator":"originator","message":"message message me"}`
 
 	m := createMessageFromJson(jsonString)
 

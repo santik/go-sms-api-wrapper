@@ -23,7 +23,6 @@ func (client MessageBirdBasedSmsClient) convertMessage(message Message) []Messag
 
 func (client MessageBirdBasedSmsClient ) send(message Message)  {
 
-
 	messages := client.convertMessage(message)
 
 	if len(messages) == 1 {
@@ -54,11 +53,7 @@ func (client MessageBirdBasedSmsClient) splitString(s string, maxLength int) []s
 
 	sRunes := []rune(s)
 
-	stringLength := len(sRunes)
-
-	numberOfChunks := float64(stringLength) / float64(maxLength)
-
-	var chunks = make([]string, numberOfChunks)
+	var chunks []string
 
 	for len(sRunes) > maxLength {
 		chunks = append(chunks, string(sRunes[:maxLength]))
@@ -74,7 +69,7 @@ func (client MessageBirdBasedSmsClient) splitString(s string, maxLength int) []s
 func (client MessageBirdBasedSmsClient) convertCombinedMessage(message Message)[]Message {
 	messageBodies := client.breakMessages(message.Message, message.max_message_length())
 
-	var combinedMessages = make([]Message, len(messageBodies))
+	var combinedMessages []Message
 
 	for _, messagePart := range messageBodies {
 		shortMessage := Message{message.Recipient, message.Originator, messagePart}

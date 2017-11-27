@@ -7,5 +7,5 @@ type Message struct {
 }
 
 func (m Message) max_message_length() int {
-	return 160
+	return 5//160
 }
