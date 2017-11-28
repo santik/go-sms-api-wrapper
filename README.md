@@ -17,6 +17,9 @@ In one terminal run
     
 In another terminal make a request
     
-    curl localhost:8080 -d '{"recipients":"+1234567890","originators":"originator","messagesss":"message"}' -H 'Content-Type: application/json'
+    curl localhost:8080/send -d '{"recipients":"+1234567890","originators":"originator","messagesss":"message"}' -H 'Content-Type: application/json'
 
+**TODO**
+
+tests!
   

@@ -11,15 +11,14 @@ type MessageBirdBasedSmsClient struct {
 }
 
 func (client MessageBirdBasedSmsClient) convertMessage(message Message) []Message {
-	body := client.breakMessages(message.Message, message.max_message_length())
+	body := client.breakMessageBody(message.Message, message.max_message_length())
 
 	if len(body) == 1 {
 		return []Message{message}
 	}
 
-	return client.convertCombinedMessage(message)
+	return client.convertToCombinedMessage(message)
 }
-
 
 func (client MessageBirdBasedSmsClient ) send(message Message)  {
 
@@ -28,17 +27,22 @@ func (client MessageBirdBasedSmsClient ) send(message Message)  {
 	if len(messages) == 1 {
 		client.messagebirdClient.NewMessage(message.Originator, []string{message.Recipient}, message.Message, nil)
 	} else {
-		reference := rand.Intn(255)
-		for i, messagePart := range client.convertMessage(message) {
-			params := &messagebird.MessageParams{
-				Type:        "binary",
-				TypeDetails: messagebird.TypeDetails{"udh": client.UdhGenerator.generate(len(messages), i+1, reference)},
-			}
-			client.messagebirdClient.NewMessage(messagePart.Originator, []string{messagePart.Recipient}, messagePart.Message, params)
-		}
+		client.sendCombinedMessage(messages)
 	}
 }
-func (client MessageBirdBasedSmsClient) breakMessages(body string, maxLength int) []string {
+
+func (client MessageBirdBasedSmsClient)sendCombinedMessage(messages []Message) {
+	reference := rand.Intn(255)
+	for i, messagePart := range messages {
+		params := &messagebird.MessageParams{
+			Type:        "binary",
+			TypeDetails: messagebird.TypeDetails{"udh": client.UdhGenerator.generate(len(messages), i+1, reference)},
+		}
+		client.messagebirdClient.NewMessage(messagePart.Originator, []string{messagePart.Recipient}, messagePart.Message, params)
+	}
+}
+
+func (client MessageBirdBasedSmsClient) breakMessageBody(body string, maxLength int) []string {
 
 	lenght := len(body)
 
@@ -49,11 +53,9 @@ func (client MessageBirdBasedSmsClient) breakMessages(body string, maxLength int
 	return client.splitString(body, maxLength)
 }
 
-func (client MessageBirdBasedSmsClient) splitString(s string, maxLength int) []string  {
+func (client MessageBirdBasedSmsClient) splitString(s string, maxLength int) (chunks []string)  {
 
 	sRunes := []rune(s)
-
-	var chunks []string
 
 	for len(sRunes) > maxLength {
 		chunks = append(chunks, string(sRunes[:maxLength]))
@@ -62,18 +64,16 @@ func (client MessageBirdBasedSmsClient) splitString(s string, maxLength int) []s
 	if len(sRunes) > 0 {
 		chunks = append(chunks, string(sRunes))
 	}
-
-	return chunks
+	return
 }
 
-func (client MessageBirdBasedSmsClient) convertCombinedMessage(message Message)[]Message {
-	messageBodies := client.breakMessages(message.Message, message.max_message_length())
+func (client MessageBirdBasedSmsClient) convertToCombinedMessage(message Message) (combinedMessages []Message) {
 
-	var combinedMessages []Message
+	messageBodies := client.breakMessageBody(message.Message, message.max_message_length())
 
 	for _, messagePart := range messageBodies {
 		shortMessage := Message{message.Recipient, message.Originator, messagePart}
 		combinedMessages = append(combinedMessages, shortMessage)
 	}
-	return combinedMessages
+	return
 }

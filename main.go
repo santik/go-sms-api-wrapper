@@ -3,44 +3,44 @@ package main
 import (
 	"github.com/messagebird/go-rest-api"
 	"net/http"
-	"fmt"
-	"io/ioutil"
 	"github.com/spf13/viper"
 )
 
 func main()  {
-	//curl localhost:8080 -d '{"recipient":"+1234567890","originator":"originator","message":"message"}' -H 'Content-Type: application/json'
-	http.HandleFunc("/", handler)
+	http.HandleFunc("/send", sendHandler)
+	http.HandleFunc("/queue", queueHandler)
 	http.ListenAndServe(":8080", nil)
 }
-func handler(writer http.ResponseWriter, request *http.Request) {
 
-	jsonString, err := ioutil.ReadAll(request.Body)
+func sendHandler(writer http.ResponseWriter, request *http.Request) {
 
-	if err != nil {
-		fmt.Fprintf(writer, "%s", err)
-	}
-
-	m := createMessageFromJson(string(jsonString))
-
-	client := getClient()
-	client.send(m)
+	smsSender := getSmsSender()
+	smsSender.send(writer, request)
 }
 
-func getClient() SmsClient  {
+func queueHandler(writer http.ResponseWriter, request *http.Request) {
+
+	//queueClient := getQueueClient()
+	//queueClient.send(m)
+}
+
+func getSmsSender() RequestBasedSmsSender {
 
 	readConfig()
 
 	mbClient := messagebird.New(viper.GetString("mb_key"))
 	udhGenerator := UdhGenerator{}
 
-	return MessageBirdBasedSmsClient{mbClient, udhGenerator}
+	client :=  MessageBirdBasedSmsClient{mbClient, udhGenerator}
+	messageCreator := RequestBasedMessageCreator{}
+
+	return RequestBasedSmsSender{client, messageCreator}
 }
 
 func readConfig() {
 
 	viper.SetConfigName("config")
-	///home/alexander/go/src/go-sms-api-wrapper/
+	//viper.AddConfigPath("/home/alexander/go/src/go-sms-api-wrapper/")
 	viper.AddConfigPath("path/to/config")
 	viper.ReadInConfig()
 }
